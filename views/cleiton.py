@@ -60,7 +60,7 @@ st.subheader("Preencha os detalhes da atividade:")
 with st.form("form_atividade"):
     barbeiro_selecionado = st.selectbox(
         "Barbeiro:",
-        'daniel'  # Define o valor inicial
+        'cleiton'  # Define o valor inicial
     )
 
     servico_selecionado = st.selectbox(
@@ -78,8 +78,8 @@ with st.form("form_atividade"):
     if submitted:
         try:
             inserir_atividade(
-                id_barbeiro=barbeiro_selecionado[0],
-                barbeiro=barbeiro_selecionado[1],
+                id_barbeiro=3,
+                barbeiro='cleiton',
                 data_hora=data_hora,
                 servico=servico_selecionado[1],
                 valor=float(servico_selecionado[2]),
