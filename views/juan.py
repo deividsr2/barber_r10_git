@@ -41,7 +41,7 @@ st.title("Cadastro de Atividades")
 barbeiros = buscar_barbeiros()
 servicos = buscar_servicos()
 
-page_name = st.session_state.get("page", "")  # Pegando o valor de 'page' armazenado na sessão
+#page_name = st.session_state.get("page", "")  # Pegando o valor de 'page' armazenado na sessão
 
 # Exibindo ou usando o valor de 'page_name'
 #st.text(page_name)
@@ -60,7 +60,7 @@ st.subheader("Preencha os detalhes da atividade:")
 with st.form("form_atividade"):
     barbeiro_selecionado = st.selectbox(
         "Barbeiro:",
-        page_name  # Define o valor inicial
+        'juan'  # Define o valor inicial
     )
 
     servico_selecionado = st.selectbox(
@@ -78,8 +78,8 @@ with st.form("form_atividade"):
     if submitted:
         try:
             inserir_atividade(
-                id_barbeiro=barbeiro_selecionado[0],
-                barbeiro=barbeiro_selecionado[1],
+                id_barbeiro=5,
+                barbeiro='juan',
                 data_hora=data_hora,
                 servico=servico_selecionado[1],
                 valor=float(servico_selecionado[2]),
