@@ -4,9 +4,10 @@ from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_a
 from datetime import datetime
 import pandas as pd
 import base64
+import imghdr
 
 # Configuração da página (DEVE SER A PRIMEIRA COISA NO SCRIPT)
-# st.set_page_config(page_title="R10 Barber Shop", page_icon=Image.open("logo.png"), layout="centered")
+#st.set_page_config(page_title="R10 Barber Shop", page_icon=Image.open("logo.png"), layout="centered")
 
 # Função para definir o background
 def set_background(image_file):
@@ -24,7 +25,7 @@ def set_background(image_file):
     st.markdown(background_style, unsafe_allow_html=True)
 
 # Chama a função para definir o fundo
-set_background("bc.jpg")
+set_background("bc.jpg") 
 
 with st.container():
     col1, col2 = st.columns([1, 4])
@@ -40,9 +41,18 @@ st.title("Cadastro de Atividades")
 barbeiros = buscar_barbeiros()
 servicos = buscar_servicos()
 
+#page_name = st.session_state.get("page", "")  # Pegando o valor de 'page' armazenado na sessão
+
+# Exibindo ou usando o valor de 'page_name'
+#st.text(page_name)
+
 # Montar listas para os selectbox
 lista_barbeiros = [(barbeiro["id"], barbeiro["barbeiro"]) for barbeiro in barbeiros]
 lista_servicos = [(servico["id"], servico["servico"], servico["valor"]) for servico in servicos]
+
+# Inicializar session state para armazenar o barbeiro selecionado
+if "barbeiro_selecionado" not in st.session_state:
+    st.session_state.barbeiro_selecionado = lista_barbeiros[0]  # Valor padrão
 
 # Formulário para cadastro de atividades
 st.subheader("Preencha os detalhes da atividade:")
@@ -50,7 +60,7 @@ st.subheader("Preencha os detalhes da atividade:")
 with st.form("form_atividade"):
     barbeiro_selecionado = st.selectbox(
         "Barbeiro:",
-        'cleiton'  # Lista apenas os nomes dos barbeiros
+        'daniel'  # Define o valor inicial
     )
 
     servico_selecionado = st.selectbox(
@@ -67,18 +77,17 @@ with st.form("form_atividade"):
 
     if submitted:
         try:
-            barbeiro_id = next(barbeiro[0] for barbeiro in lista_barbeiros if barbeiro[1] == barbeiro_selecionado)
             inserir_atividade(
-                id_barbeiro=barbeiro_id,
-                barbeiro=barbeiro_selecionado,
+                id_barbeiro=barbeiro_selecionado[0],
+                barbeiro=barbeiro_selecionado[1],
                 data_hora=data_hora,
                 servico=servico_selecionado[1],
                 valor=float(servico_selecionado[2]),
                 observacao=observacao
             )
             st.success("Atividade cadastrada com sucesso!")
+            st.rerun()
         except Exception as e:
-
             st.error(f"Erro ao cadastrar atividade: {e}")
 
 # Tabela de atividades
