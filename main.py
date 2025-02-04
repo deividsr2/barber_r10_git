@@ -1,20 +1,18 @@
 import streamlit as st
 from PIL import Image
+from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_atividades
+from datetime import datetime
+import pandas as pd
 import base64
 
-# Configuração da página
-st.set_page_config(page_title="R10 Barber Shop", page_icon="logo.png", layout="centered")
+# Configuração da página (DEVE SER A PRIMEIRA COISA NO SCRIPT)
+# st.set_page_config(page_title="R10 Barber Shop", page_icon=Image.open("logo.png"), layout="centered")
 
-# Função para converter imagem em Base64 (para incorporar no HTML)
-def img_to_base64(image_path):
-    with open(image_path, "rb") as f:
-        img_bytes = f.read()
-    return base64.b64encode(img_bytes).decode()
-
-# Exibe o background e o logo
+# Função para definir o background
 def set_background(image_file):
     with open(image_file, "rb") as image:
         encoded_string = base64.b64encode(image.read()).decode()
+    
     background_style = f"""
     <style>
     .stApp {{
@@ -25,6 +23,7 @@ def set_background(image_file):
     """
     st.markdown(background_style, unsafe_allow_html=True)
 
+# Chama a função para definir o fundo
 set_background("bc.jpg")
 
 with st.container():
@@ -35,43 +34,107 @@ with st.container():
 
 st.markdown("---")
 
-# Inicializa ou atualiza o estado da sessão para a página (view) selecionada
-if "page" not in st.session_state:
-    st.session_state["page"] = ""
+st.title("Navegação entre Páginas")
 
-# Exibe a lista de barbeiros para navegação
-barber_names = ["cleiton", "daniel", "diego", "juan", "randerson"]
+# Menu de navegação
+page = st.sidebar.selectbox(
+    "Selecione a página:",
+    ["Seleção de Barbeiros", "Cadastro de Atividades", "Cleiton", "Daniel", "Diego", "Juan", "Randerson"]
+)
 
-if st.session_state["page"] == "":
-    st.title("Selecione um Barbeiro")
-    for barber in barber_names:
-        if st.button(barber.title()):
-            st.session_state["page"] = barber
+# Páginas
+if page == "Seleção de Barbeiros":
+    st.header("Seleção de Barbeiros")
+    st.write("Navegue para a página dos barbeiros através do menu ao lado.")
 
-# Se o parâmetro "page" estiver definido, carrega a view correspondente
-else:
-    page = st.session_state["page"]
+elif page == "Cadastro de Atividades":
+    st.header("Cadastro de Atividades")
     
-    # Botão para voltar à página inicial
-    if st.sidebar.button("Voltar"):
-        st.session_state["page"] = ""
-
-    st.write(f"Carregando view para: {page}")
+    barbeiros = buscar_barbeiros()
+    servicos = buscar_servicos()
     
-    if page == "cleiton":
-        st.write("Conteúdo do Cleiton")
-        # from views import cleiton
-    elif page == "daniel":
-        st.write("Conteúdo do Daniel")
-        # from views import daniel
-    elif page == "diego":
-        st.write("Conteúdo do Diego")
-        # from views import diego
-    elif page == "juan":
-        st.write("Conteúdo do Juan")
-        # from views import juan
-    elif page == "randerson":
-        st.write("Conteúdo do Randerson")
-        # from views import randerson
+    lista_barbeiros = [(barbeiro["id"], barbeiro["barbeiro"]) for barbeiro in barbeiros]
+    lista_servicos = [(servico["id"], servico["servico"], servico["valor"]) for servico in servicos]
+    
+    st.subheader("Preencha os detalhes da atividade:")
+    with st.form("form_atividade"):
+        barbeiro_selecionado = st.selectbox(
+            "Barbeiro:",
+            [barbeiro[1] for barbeiro in lista_barbeiros]
+        )
+    
+        servico_selecionado = st.selectbox(
+            "Serviço:",
+            options=lista_servicos,
+            format_func=lambda x: f"{x[1]} - R$ {x[2]:.2f}"
+        )
+    
+        observacao = st.text_area("Observação (opcional):")
+    
+        data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+        submitted = st.form_submit_button("Cadastrar Atividade")
+    
+        if submitted:
+            try:
+                barbeiro_id = next(barbeiro[0] for barbeiro in lista_barbeiros if barbeiro[1] == barbeiro_selecionado)
+                inserir_atividade(
+                    id_barbeiro=barbeiro_id,
+                    barbeiro=barbeiro_selecionado,
+                    data_hora=data_hora,
+                    servico=servico_selecionado[1],
+                    valor=float(servico_selecionado[2]),
+                    observacao=observacao
+                )
+                st.success("Atividade cadastrada com sucesso!")
+            except Exception as e:
+                st.error(f"Erro ao cadastrar atividade: {e}")
+
+    st.subheader("Atividades Registradas")
+    atividades = buscar_atividades()
+    
+    if atividades:
+        df = pd.DataFrame(atividades)
+        df.rename(
+            columns={
+                "id": "ID",
+                "id_barbeiro": "ID Barbeiro",
+                "barbeiro": "Barbeiro",
+                "data_hora": "Data e Hora",
+                "servico": "Serviço",
+                "valor": "Valor",
+                "observacao": "Observação",
+            },
+            inplace=True,
+        )
+        st.dataframe(df, use_container_width=True)
     else:
-        st.error("Barbeiro não encontrado.")
+        st.info("Nenhuma atividade registrada até o momento.")
+
+elif page == "Cleiton":
+    st.header("Cleiton")
+    from views import cleiton
+    cleiton.display()
+
+elif page == "Daniel":
+    st.header("Daniel")
+    from views import daniel
+    daniel.display()
+
+elif page == "Diego":
+    st.header("Diego")
+    from views import diego
+    diego.display()
+
+elif page == "Juan":
+    st.header("Juan")
+    from views import juan
+    juan.display()
+
+elif page == "Randerson":
+    st.header("Randerson")
+    from views import randerson
+    randerson.display()
+
+else:
+    st.error("Página não encontrada.")
