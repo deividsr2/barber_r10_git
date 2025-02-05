@@ -4,18 +4,30 @@ from banco import inserir_servico, buscar_servicos
 # Título da página
 st.title("Cadastro de Serviços")
 
+# Opções predefinidas
+tipos = ["serviço", "despesa", "produto", "vale"]
+
 # Formulário para inserir novos serviços
 with st.form(key="servico_form"):
     servico = st.text_input("Nome do Serviço")
+    tipo = st.selectbox("Tipo de Cadastro", tipos)
     valor = st.number_input("Valor do Serviço", min_value=0.0, step=0.01)
     submit_button = st.form_submit_button(label="Cadastrar Serviço")
 
 # Quando o formulário for enviado
 if submit_button:
     if servico and valor >= 0:
+        # Concatenar o tipo ao nome do serviço
+        servico_com_tipo = f"{servico} - {tipo}"
+        
+        # Ajustar o valor se for 'despesa' ou 'vale'
+        if tipo in ["despesa", "vale"]:
+            valor = -valor  # Armazenar como valor negativo
+
         # Inserir no banco de dados
-        inserir_servico(servico, valor)
-        st.success(f"Serviço '{servico}' cadastrado com sucesso!")
+        inserir_servico(servico_com_tipo, valor)
+        st.success(f"Serviço '{servico_com_tipo}' cadastrado com sucesso!")
+
     else:
         st.error("Por favor, preencha todos os campos corretamente.")
 
