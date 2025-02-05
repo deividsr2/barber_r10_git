@@ -1,22 +1,30 @@
 import streamlit as st
 import base64
-import os
 
 # Título da página
 st.title("Bem-vindo à R10 Barber Shop")
 st.write("Use o menu à esquerda para navegar entre as páginas dos barbeiros.")
 
-# Lista de imagens (caminhos relativos à raiz do projeto)
-imagens = ["cleiton.jpg", "diego.jpg", "daniel.jpg", "juan.jpg", "randerson.jpg"]
+# Lista de imagens e links correspondentes
+imagens_links = {
+    "cleiton.jpg": "https://deividsr2-barber-r10-git-main-v4o0iy.streamlit.app/cleiton",
+    "diego.jpg": "https://deividsr2-barber-r10-git-main-v4o0iy.streamlit.app/diego",
+    "daniel.jpg": "https://deividsr2-barber-r10-git-main-v4o0iy.streamlit.app/daniel",
+    "juan.jpg": "https://deividsr2-barber-r10-git-main-v4o0iy.streamlit.app/juan",
+    "randerson.jpg": "https://deividsr2-barber-r10-git-main-v4o0iy.streamlit.app/randerson",
+}
 
 # Função para converter imagens em Base64
 def get_image_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
-# Gerar tags <img> com imagens em Base64 para o HTML
+# Gerar imagens com links em Base64 para embutir no HTML
 image_tags = "".join(
-    [f'<img src="data:image/jpg;base64,{get_image_base64(img)}" class="{"active" if i == 0 else ""}">' for i, img in enumerate(imagens)]
+    [
+        f'<a href="{link}" target="_blank"><img src="data:image/jpg;base64,{get_image_base64(img)}" class="{"active" if i == 0 else ""}"></a>'
+        for i, (img, link) in enumerate(imagens_links.items())
+    ]
 )
 
 # Código HTML do carrossel
@@ -71,7 +79,7 @@ carousel_html = f"""
 
 <script>
     let currentSlide = 0;
-    const slides = document.querySelectorAll('.carousel img');
+    const slides = document.querySelectorAll('.carousel a img');
 
     function showSlide(index) {{
         slides.forEach((slide, i) => {{
