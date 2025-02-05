@@ -7,7 +7,7 @@ import base64
 import plotly.express as px
 
 # Configuração da página
-#st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
+st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
 
 # Função para definir o background
 def set_background(image_file):
@@ -90,27 +90,38 @@ if atividades:
     # Converter 'data_hora' para datetime
     df["data_hora"] = pd.to_datetime(df["data_hora"], format="%Y-%m-%d %H:%M:%S")
 
-    # Criar filtro de data
-    st.sidebar.header("📅 Filtro de Data")
+    # Criar filtro de data ACIMA DO GRÁFICO
+    st.subheader("📅 Filtro de Data")
+    col1, col2 = st.columns(2)
+
     data_min = df["data_hora"].min().date()
     data_max = df["data_hora"].max().date()
     
-    data_inicio, data_fim = st.sidebar.date_input("Selecione o período:", [data_min, data_max])
+    data_inicio = col1.date_input("Data inicial:", data_min)
+    data_fim = col2.date_input("Data final:", data_max)
 
     # Aplicar filtro de data
     df_filtrado = df[(df["data_hora"].dt.date >= data_inicio) & (df["data_hora"].dt.date <= data_fim)]
 
-    # Exibir KPI
+    # Exibir KPI acima do gráfico
     total_valor = df_filtrado["valor"].sum()
     st.metric(label="💰 Receita Total no Período", value=f"R$ {total_valor:.2f}")
 
-    # Exibir DataFrame filtrado
+    # Criar gráfico de barras sem hora detalhada no eixo X
+    st.subheader("📊 Receita por Data")
+    df_filtrado["Data"] = df_filtrado["data_hora"].dt.date  # Removendo a hora do eixo X
+    fig = px.bar(
+        df_filtrado,
+        x="Data",  # Agora apenas a data, sem hora
+        y="valor",
+        title="Receita por Data",
+        labels={"Data": "Data", "valor": "Valor R$"},
+        text_auto=True
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Exibir DataFrame abaixo do gráfico
     st.subheader("📋 Atividades Registradas")
     st.dataframe(df_filtrado, use_container_width=True)
-
-    # Criar gráfico de barras
-    st.subheader("📊 Receita por Data")
-    fig = px.bar(df_filtrado, x="data_hora", y="valor", title="Receita por Data", labels={"data_hora": "Data", "valor": "Valor R$"})
-    st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("Nenhuma atividade registrada até o momento.")
