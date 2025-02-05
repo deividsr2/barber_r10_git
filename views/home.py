@@ -27,7 +27,7 @@ image_tags = "".join(
     ]
 )
 
-# Código HTML do carrossel com 3 imagens por vez
+# Código HTML do carrossel corrigido
 carousel_html = f"""
 <style>
     .carousel-container {{
@@ -86,7 +86,7 @@ carousel_html = f"""
 
 <script>
     let currentIndex = 0;
-    const totalSlides = {len(imagens_links)} - 2;
+    const totalSlides = {len(imagens_links)} - 2; // Exibe todas as imagens
     const carousel = document.querySelector(".carousel");
 
     function updateCarousel() {{
@@ -96,12 +96,12 @@ carousel_html = f"""
     }}
 
     function nextSlide() {{
-        currentIndex = (currentIndex + 1) % totalSlides;
+        currentIndex = (currentIndex + 1) % {len(imagens_links)};
         updateCarousel();
     }}
 
     function prevSlide() {{
-        currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+        currentIndex = (currentIndex - 1 + {len(imagens_links)}) % {len(imagens_links)};
         updateCarousel();
     }}
 
