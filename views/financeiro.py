@@ -73,10 +73,7 @@ if atividades:
         text_auto=True
     )
 
-    fig1.update_layout(
-        plot_bgcolor="white",  # Remove background do gráfico
-        paper_bgcolor="white"
-    )
+
 
     st.plotly_chart(fig1, use_container_width=True)
 
@@ -104,10 +101,7 @@ if atividades:
         color="servico"
     )
 
-    fig3.update_layout(
-        plot_bgcolor="white",  
-        paper_bgcolor="white"
-    )
+    
 
     st.plotly_chart(fig3, use_container_width=True)
 
