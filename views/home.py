@@ -1,37 +1,49 @@
 import streamlit as st
+import base64
+import os
 
+# Título da página
 st.title("Bem-vindo à R10 Barber Shop")
 st.write("Use o menu à esquerda para navegar entre as páginas dos barbeiros.")
 
+# Lista de imagens (caminhos relativos à raiz do projeto)
+imagens = ["cleiton.jpg", "diego.jpg", "daniel.jpg", "juan.jpg", "randerson.jpg"]
 
+# Função para converter imagens em Base64
+def get_image_base64(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
 
+# Gerar tags <img> com imagens em Base64 para o HTML
+image_tags = "".join(
+    [f'<img src="data:image/jpg;base64,{get_image_base64(img)}" class="{"active" if i == 0 else ""}">' for i, img in enumerate(imagens)]
+)
 
-# Código HTML, CSS e JavaScript para o carrossel
-carousel_html = """
+# Código HTML do carrossel
+carousel_html = f"""
 <style>
-    .carousel {
+    .carousel {{
         position: relative;
         width: 100%;
         max-width: 600px;
         margin: auto;
         overflow: hidden;
-        border: 2px solid #ccc;
         border-radius: 10px;
-    }
-    .carousel img {
+    }}
+    .carousel img {{
         width: 100%;
         display: none;
         border-radius: 10px;
-    }
-    .carousel img.active {
+    }}
+    .carousel img.active {{
         display: block;
         animation: fade 1.5s;
-    }
-    @keyframes fade {
-        from {opacity: 0.4;}
-        to {opacity: 1;}
-    }
-    .carousel button {
+    }}
+    @keyframes fade {{
+        from {{opacity: 0.4;}}
+        to {{opacity: 1;}}
+    }}
+    .carousel button {{
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
@@ -41,21 +53,18 @@ carousel_html = """
         padding: 10px;
         cursor: pointer;
         border-radius: 50%;
-    }
-    .carousel button.prev {
+        font-size: 18px;
+    }}
+    .carousel button.prev {{
         left: 10px;
-    }
-    .carousel button.next {
+    }}
+    .carousel button.next {{
         right: 10px;
-    }
+    }}
 </style>
 
 <div class="carousel">
-    <img src="cleiton.jpg" class="active">
-    <img src="diego.jpg">
-    <img src="daniel.jpg">
-    <img src="juan.jpg">
-    <img src="randerson.jpg">
+    {image_tags}
     <button class="prev" onclick="prevSlide()">&#10094;</button>
     <button class="next" onclick="nextSlide()">&#10095;</button>
 </div>
@@ -64,29 +73,29 @@ carousel_html = """
     let currentSlide = 0;
     const slides = document.querySelectorAll('.carousel img');
 
-    function showSlide(index) {
-        slides.forEach((slide, i) => {
+    function showSlide(index) {{
+        slides.forEach((slide, i) => {{
             slide.classList.remove('active');
-            if (i === index) {
+            if (i === index) {{
                 slide.classList.add('active');
-            }
-        });
-    }
+            }}
+        }});
+    }}
 
-    function nextSlide() {
+    function nextSlide() {{
         currentSlide = (currentSlide + 1) % slides.length;
         showSlide(currentSlide);
-    }
+    }}
 
-    function prevSlide() {
+    function prevSlide() {{
         currentSlide = (currentSlide - 1 + slides.length) % slides.length;
         showSlide(currentSlide);
-    }
+    }}
 
-    // Auto-play (opcional)
-    setInterval(nextSlide, 3000); // Muda de slide a cada 3 segundos
+    // Auto-play (muda de slide a cada 3 segundos)
+    setInterval(nextSlide, 3000);
 </script>
 """
 
-# Exibe o carrossel no Streamlit
-st.components.v1.html(carousel_html)
+# Exibir carrossel no Streamlit
+st.components.v1.html(carousel_html, height=450)
