@@ -7,6 +7,7 @@ import base64
 import plotly.express as px
 
 # Configuração da página
+#st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
 
 # Função para definir o background
 def set_background(image_file):
@@ -102,21 +103,33 @@ if atividades:
     # Aplicar filtro de data
     df_filtrado = df[(df["data_hora"].dt.date >= data_inicio) & (df["data_hora"].dt.date <= data_fim)]
 
-    # Exibir KPI acima do gráfico
+    # Exibir KPI acima do gráfico com cálculo de lucro
+    col1, col2 = st.columns(2)
+    
     total_valor = df_filtrado["valor"].sum()
-    st.metric(label="💰 Receita Total no Período", value=f"R$ {total_valor:.2f}")
+    col1.metric(label="💰 Receita Total no Período", value=f"R$ {total_valor:.2f}")
 
-    # Criar gráfico de barras sem hora detalhada no eixo X
+    lucro_percentual = col2.slider("Selecione o percentual de lucro:", min_value=10, max_value=100, value=50, step=5)
+    lucro_calculado = (total_valor * lucro_percentual) / 100
+    col2.metric(label=f"📈 Lucro Estimado ({lucro_percentual}%)", value=f"R$ {lucro_calculado:.2f}")
+
+    # Criar gráfico de barras sem background
     st.subheader("📊 Receita por Data")
     df_filtrado["Data"] = df_filtrado["data_hora"].dt.date  # Removendo a hora do eixo X
     fig = px.bar(
         df_filtrado,
-        x="Data",  # Agora apenas a data, sem hora
+        x="Data",  
         y="valor",
         title="Receita por Data",
         labels={"Data": "Data", "valor": "Valor R$"},
         text_auto=True
     )
+
+    fig.update_layout(
+        plot_bgcolor="white",  # Remove background do gráfico
+        paper_bgcolor="white"
+    )
+
     st.plotly_chart(fig, use_container_width=True)
 
     # Exibir DataFrame abaixo do gráfico
