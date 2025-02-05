@@ -85,7 +85,9 @@ carousel_html = f"""
     const carousel = document.querySelector(".carousel");
 
     function updateCarousel() {{
-        carousel.style.transform = `translateX(-${currentIndex * 33.33}%)`;
+        if (carousel) {{
+            carousel.style.transform = "translateX(-" + (currentIndex * 33.33) + "%)";
+        }}
     }}
 
     function nextSlide() {{
@@ -98,8 +100,11 @@ carousel_html = f"""
         updateCarousel();
     }}
 
-    // Auto-play (muda os slides a cada 3 segundos)
-    setInterval(nextSlide, 3000);
+    // Aguarda a página carregar antes de tentar modificar o DOM
+    document.addEventListener("DOMContentLoaded", function() {{
+        updateCarousel();
+        setInterval(nextSlide, 3000); // Auto-play a cada 3 segundos
+    }});
 </script>
 """
 
