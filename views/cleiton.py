@@ -4,10 +4,10 @@ from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_a
 from datetime import datetime
 import pandas as pd
 import base64
-import imghdr
+import plotly.express as px
 
-# Configuração da página (DEVE SER A PRIMEIRA COISA NO SCRIPT)
-#st.set_page_config(page_title="R10 Barber Shop", page_icon=Image.open("logo.png"), layout="centered")
+# Configuração da página
+#st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
 
 # Função para definir o background
 def set_background(image_file):
@@ -34,34 +34,20 @@ with st.container():
     col2.title("R10 Barber Shop")
 
 st.markdown("---")
-
 st.title("Cadastro de Atividades")
 
 # Buscar dados das tabelas r10_barbeiros e r10_servicos
 barbeiros = buscar_barbeiros()
 servicos = buscar_servicos()
 
-#page_name = st.session_state.get("page", "")  # Pegando o valor de 'page' armazenado na sessão
-
-# Exibindo ou usando o valor de 'page_name'
-#st.text(page_name)
-
 # Montar listas para os selectbox
 lista_barbeiros = [(barbeiro["id"], barbeiro["barbeiro"]) for barbeiro in barbeiros]
 lista_servicos = [(servico["id"], servico["servico"], servico["valor"]) for servico in servicos]
 
-# Inicializar session state para armazenar o barbeiro selecionado
-if "barbeiro_selecionado" not in st.session_state:
-    st.session_state.barbeiro_selecionado = lista_barbeiros[0]  # Valor padrão
-
 # Formulário para cadastro de atividades
 st.subheader("Preencha os detalhes da atividade:")
-
 with st.form("form_atividade"):
-    barbeiro_selecionado = st.selectbox(
-        "Barbeiro:",
-        'cleiton'  # Define o valor inicial
-    )
+    barbeiro_selecionado = "cleiton"  # Fixo no Cleiton
 
     servico_selecionado = st.selectbox(
         "Serviço:",
@@ -79,7 +65,7 @@ with st.form("form_atividade"):
         try:
             inserir_atividade(
                 id_barbeiro=3,
-                barbeiro='cleiton',
+                barbeiro="cleiton",
                 data_hora=data_hora,
                 servico=servico_selecionado[1],
                 valor=float(servico_selecionado[2]),
@@ -90,24 +76,41 @@ with st.form("form_atividade"):
         except Exception as e:
             st.error(f"Erro ao cadastrar atividade: {e}")
 
-# Tabela de atividades
-st.subheader("Atividades Registradas")
-atividades = buscar_atividades()
+# Exibir atividades apenas do Cleiton
+st.markdown("---")
+st.title("Atividades de Cleiton 💈")
 
+atividades = buscar_atividades()
 if atividades:
     df = pd.DataFrame(atividades)
-    df.rename(
-        columns={
-            "id": "ID",
-            "id_barbeiro": "ID Barbeiro",
-            "barbeiro": "Barbeiro",
-            "data_hora": "Data e Hora",
-            "servico": "Serviço",
-            "valor": "Valor",
-            "observacao": "Observação",
-        },
-        inplace=True,
-    )
-    st.dataframe(df, use_container_width=True)
+    
+    # Filtrar apenas Cleiton
+    df = df[df["barbeiro"] == "cleiton"]
+
+    # Converter 'data_hora' para datetime
+    df["data_hora"] = pd.to_datetime(df["data_hora"], format="%Y-%m-%d %H:%M:%S")
+
+    # Criar filtro de data
+    st.sidebar.header("📅 Filtro de Data")
+    data_min = df["data_hora"].min().date()
+    data_max = df["data_hora"].max().date()
+    
+    data_inicio, data_fim = st.sidebar.date_input("Selecione o período:", [data_min, data_max])
+
+    # Aplicar filtro de data
+    df_filtrado = df[(df["data_hora"].dt.date >= data_inicio) & (df["data_hora"].dt.date <= data_fim)]
+
+    # Exibir KPI
+    total_valor = df_filtrado["valor"].sum()
+    st.metric(label="💰 Receita Total no Período", value=f"R$ {total_valor:.2f}")
+
+    # Exibir DataFrame filtrado
+    st.subheader("📋 Atividades Registradas")
+    st.dataframe(df_filtrado, use_container_width=True)
+
+    # Criar gráfico de barras
+    st.subheader("📊 Receita por Data")
+    fig = px.bar(df_filtrado, x="data_hora", y="valor", title="Receita por Data", labels={"data_hora": "Data", "valor": "Valor R$"})
+    st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("Nenhuma atividade registrada até o momento.")
