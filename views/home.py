@@ -33,21 +33,22 @@ carousel_html = f"""
     .carousel-container {{
         position: relative;
         width: 100%;
-        max-width: 800px;
+        max-width: 700px;
         margin: auto;
         overflow: hidden;
+        border-radius: 10px;
     }}
     .carousel {{
         display: flex;
         transition: transform 0.5s ease-in-out;
-        width: {len(imagens_links) * 66.33}%;
+        width: {len(imagens_links) * 33.33}%;
     }}
     .carousel a {{
         flex: 1 0 33.33%;
         text-align: center;
     }}
     .carousel img {{
-        width: 100%;
+        width: 80%;  /* Reduz o tamanho das imagens */
         border-radius: 10px;
     }}
     .carousel-buttons {{
@@ -59,13 +60,17 @@ carousel_html = f"""
         transform: translateY(-50%);
     }}
     .carousel-buttons button {{
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.7);
         color: white;
         border: none;
-        padding: 10px;
+        padding: 15px;
         cursor: pointer;
         border-radius: 50%;
-        font-size: 18px;
+        font-size: 24px;
+        transition: 0.3s;
+    }}
+    .carousel-buttons button:hover {{
+        background-color: rgba(0, 0, 0, 1);
     }}
 </style>
 
@@ -74,8 +79,8 @@ carousel_html = f"""
         {image_tags}
     </div>
     <div class="carousel-buttons">
-        <button onclick="prevSlide()">&#10094;</button>
-        <button onclick="nextSlide()">&#10095;</button>
+        <button onclick="prevSlide()">&#10094;</button>  <!-- Seta esquerda -->
+        <button onclick="nextSlide()">&#10095;</button>  <!-- Seta direita -->
     </div>
 </div>
 
@@ -100,7 +105,6 @@ carousel_html = f"""
         updateCarousel();
     }}
 
-    // Aguarda a página carregar antes de tentar modificar o DOM
     document.addEventListener("DOMContentLoaded", function() {{
         updateCarousel();
         setInterval(nextSlide, 3000); // Auto-play a cada 3 segundos
