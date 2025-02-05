@@ -63,6 +63,16 @@ randerson = st.Page(
     title="randerson",
     icon=":material/smart_toy:",
 )
+financeiro = st.Page(
+    "views/financeiro.py",
+    title="financeiro",
+    icon=":material/attach_money:",
+)
+cadastro = st.Page(
+    "views/cadastro.py",
+    title="cadastro",
+    icon=":material/settings:",
+)
 
 
 # --- NAVIGATION SETUP [WITHOUT SECTIONS] ---
@@ -73,6 +83,8 @@ pg = st.navigation(
     {
         "Home": [Home],
         "Barbeiros": [cleiton,daniel,diego,juan,randerson],
+        "Financeiro": [financeiro],
+        "Cadastro": [cadastro],
     }
 )
 

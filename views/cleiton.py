@@ -126,9 +126,6 @@ if atividades:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    # Exibir DataFrame abaixo do gráfico
-    st.subheader("📋 Atividades Registradas")
-    st.dataframe(df_filtrado, use_container_width=True)
 
     # Exibir DataFrame abaixo do gráfico
     st.subheader("📋 Atividades Registradas")

@@ -4,10 +4,10 @@ from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_a
 from datetime import datetime
 import pandas as pd
 import base64
-import imghdr
+import plotly.express as px
 
-# Configuração da página (DEVE SER A PRIMEIRA COISA NO SCRIPT)
-#st.set_page_config(page_title="R10 Barber Shop", page_icon=Image.open("logo.png"), layout="centered")
+# Configuração da página
+#st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
 
 # Função para definir o background
 def set_background(image_file):
@@ -34,34 +34,20 @@ with st.container():
     col2.title("R10 Barber Shop")
 
 st.markdown("---")
-
 st.title("Cadastro de Atividades")
 
 # Buscar dados das tabelas r10_barbeiros e r10_servicos
 barbeiros = buscar_barbeiros()
 servicos = buscar_servicos()
 
-#page_name = st.session_state.get("page", "")  # Pegando o valor de 'page' armazenado na sessão
-
-# Exibindo ou usando o valor de 'page_name'
-#st.text(page_name)
-
 # Montar listas para os selectbox
 lista_barbeiros = [(barbeiro["id"], barbeiro["barbeiro"]) for barbeiro in barbeiros]
 lista_servicos = [(servico["id"], servico["servico"], servico["valor"]) for servico in servicos]
 
-# Inicializar session state para armazenar o barbeiro selecionado
-if "barbeiro_selecionado" not in st.session_state:
-    st.session_state.barbeiro_selecionado = lista_barbeiros[0]  # Valor padrão
-
 # Formulário para cadastro de atividades
 st.subheader("Preencha os detalhes da atividade:")
-
 with st.form("form_atividade"):
-    barbeiro_selecionado = st.selectbox(
-        "Barbeiro:",
-        'daniel'  # Define o valor inicial
-    )
+    barbeiro_selecionado = "daniel"  # Fixo no daniel
 
     servico_selecionado = st.selectbox(
         "Serviço:",
@@ -78,8 +64,8 @@ with st.form("form_atividade"):
     if submitted:
         try:
             inserir_atividade(
-                id_barbeiro=4,
-                barbeiro='daniel',
+                id_barbeiro=3,
+                barbeiro="daniel",
                 data_hora=data_hora,
                 servico=servico_selecionado[1],
                 valor=float(servico_selecionado[2]),
@@ -90,24 +76,59 @@ with st.form("form_atividade"):
         except Exception as e:
             st.error(f"Erro ao cadastrar atividade: {e}")
 
-# Tabela de atividades
-st.subheader("Atividades Registradas")
-atividades = buscar_atividades()
+# Exibir atividades apenas do daniel
+st.markdown("---")
+st.title("Atividades de daniel 💈")
 
+atividades = buscar_atividades()
 if atividades:
     df = pd.DataFrame(atividades)
-    df.rename(
-        columns={
-            "id": "ID",
-            "id_barbeiro": "ID Barbeiro",
-            "barbeiro": "Barbeiro",
-            "data_hora": "Data e Hora",
-            "servico": "Serviço",
-            "valor": "Valor",
-            "observacao": "Observação",
-        },
-        inplace=True,
+    
+    # Filtrar apenas daniel
+    df = df[df["barbeiro"] == "daniel"]
+
+    # Converter 'data_hora' para datetime
+    df["data_hora"] = pd.to_datetime(df["data_hora"], format="%Y-%m-%d %H:%M:%S")
+
+    # Criar filtro de data ACIMA DO GRÁFICO
+    st.subheader("📅 Filtro de Data")
+    col1, col2 = st.columns(2)
+
+    data_min = df["data_hora"].min().date()
+    data_max = df["data_hora"].max().date()
+    
+    data_inicio = col1.date_input("Data inicial:", data_min)
+    data_fim = col2.date_input("Data final:", data_max)
+
+    # Aplicar filtro de data
+    df_filtrado = df[(df["data_hora"].dt.date >= data_inicio) & (df["data_hora"].dt.date <= data_fim)]
+
+    # Exibir KPI acima do gráfico com cálculo de lucro
+    col1, col2 = st.columns(2)
+    
+    total_valor = df_filtrado["valor"].sum()
+    col1.metric(label="💰 Receita Total no Período", value=f"R$ {total_valor:.2f}")
+
+    lucro_percentual = col2.slider("Selecione o percentual de lucro:", min_value=10, max_value=100, value=50, step=5)
+    lucro_calculado = (total_valor * lucro_percentual) / 100
+    col2.metric(label=f"📈 Lucro Estimado ({lucro_percentual}%)", value=f"R$ {lucro_calculado:.2f}")
+
+    # Criar gráfico de barras sem background
+    st.subheader("📊 Receita por Data")
+    df_filtrado["Data"] = df_filtrado["data_hora"].dt.date  # Removendo a hora do eixo X
+    fig = px.bar(
+        df_filtrado,
+        x="Data",  # Agora apenas a data, sem hora
+        y="valor",
+        title="Receita por Data",
+        labels={"Data": "Data", "valor": "Valor R$"},
+        text_auto=True
     )
-    st.dataframe(df, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
+
+
+    # Exibir DataFrame abaixo do gráfico
+    st.subheader("📋 Atividades Registradas")
+    st.dataframe(df_filtrado, use_container_width=True)
 else:
     st.info("Nenhuma atividade registrada até o momento.")
