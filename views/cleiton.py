@@ -118,19 +118,17 @@ if atividades:
     df_filtrado["Data"] = df_filtrado["data_hora"].dt.date  # Removendo a hora do eixo X
     fig = px.bar(
         df_filtrado,
-        x="Data",  
+        x="Data",  # Agora apenas a data, sem hora
         y="valor",
         title="Receita por Data",
         labels={"Data": "Data", "valor": "Valor R$"},
         text_auto=True
     )
-
-    fig.update_layout(
-        plot_bgcolor="white",  # Remove background do gráfico
-        paper_bgcolor="white"
-    )
-
     st.plotly_chart(fig, use_container_width=True)
+
+    # Exibir DataFrame abaixo do gráfico
+    st.subheader("📋 Atividades Registradas")
+    st.dataframe(df_filtrado, use_container_width=True)
 
     # Exibir DataFrame abaixo do gráfico
     st.subheader("📋 Atividades Registradas")
