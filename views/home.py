@@ -40,7 +40,7 @@ carousel_html = f"""
     .carousel {{
         display: flex;
         transition: transform 0.5s ease-in-out;
-        width: {len(imagens_links) * 33.33}%;
+        width: {len(imagens_links) * 66.33}%;
     }}
     .carousel a {{
         flex: 1 0 33.33%;
