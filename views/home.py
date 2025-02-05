@@ -106,4 +106,4 @@ carousel_html = f"""
 """
 
 # Exibir carrossel no Streamlit
-st.components.v1.html(carousel_html, height=450)
+st.components.v1.html(carousel_html, height=150)
