@@ -7,7 +7,6 @@ import base64
 import plotly.express as px
 
 # Configuração da página
-st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
 
 # Função para definir o background
 def set_background(image_file):
