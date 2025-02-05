@@ -22,39 +22,43 @@ def get_image_base64(image_path):
 # Gerar imagens com links em Base64 para embutir no HTML
 image_tags = "".join(
     [
-        f'<a href="{link}" target="_blank"><img src="data:image/jpg;base64,{get_image_base64(img)}" class="{"active" if i == 0 else ""}"></a>'
-        for i, (img, link) in enumerate(imagens_links.items())
+        f'<a href="{link}" target="_blank"><img src="data:image/jpg;base64,{get_image_base64(img)}"></a>'
+        for img, link in imagens_links.items()
     ]
 )
 
-# Código HTML do carrossel
+# Código HTML do carrossel com 3 imagens por vez
 carousel_html = f"""
 <style>
-    .carousel {{
+    .carousel-container {{
         position: relative;
         width: 100%;
-        max-width: 600px;
+        max-width: 800px;
         margin: auto;
         overflow: hidden;
-        border-radius: 10px;
+    }}
+    .carousel {{
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+        width: {len(imagens_links) * 33.33}%;
+    }}
+    .carousel a {{
+        flex: 1 0 33.33%;
+        text-align: center;
     }}
     .carousel img {{
         width: 100%;
-        display: none;
         border-radius: 10px;
     }}
-    .carousel img.active {{
-        display: block;
-        animation: fade 1.5s;
-    }}
-    @keyframes fade {{
-        from {{opacity: 0.4;}}
-        to {{opacity: 1;}}
-    }}
-    .carousel button {{
+    .carousel-buttons {{
         position: absolute;
         top: 50%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
         transform: translateY(-50%);
+    }}
+    .carousel-buttons button {{
         background-color: rgba(0, 0, 0, 0.5);
         color: white;
         border: none;
@@ -63,47 +67,41 @@ carousel_html = f"""
         border-radius: 50%;
         font-size: 18px;
     }}
-    .carousel button.prev {{
-        left: 10px;
-    }}
-    .carousel button.next {{
-        right: 10px;
-    }}
 </style>
 
-<div class="carousel">
-    {image_tags}
-    <button class="prev" onclick="prevSlide()">&#10094;</button>
-    <button class="next" onclick="nextSlide()">&#10095;</button>
+<div class="carousel-container">
+    <div class="carousel">
+        {image_tags}
+    </div>
+    <div class="carousel-buttons">
+        <button onclick="prevSlide()">&#10094;</button>
+        <button onclick="nextSlide()">&#10095;</button>
+    </div>
 </div>
 
 <script>
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.carousel a img');
+    let currentIndex = 0;
+    const totalSlides = {len(imagens_links)} - 2;
+    const carousel = document.querySelector(".carousel");
 
-    function showSlide(index) {{
-        slides.forEach((slide, i) => {{
-            slide.classList.remove('active');
-            if (i === index) {{
-                slide.classList.add('active');
-            }}
-        }});
+    function updateCarousel() {{
+        carousel.style.transform = `translateX(-${currentIndex * 33.33}%)`;
     }}
 
     function nextSlide() {{
-        currentSlide = (currentSlide + 1) % slides.length;
-        showSlide(currentSlide);
+        currentIndex = (currentIndex + 1) % totalSlides;
+        updateCarousel();
     }}
 
     function prevSlide() {{
-        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-        showSlide(currentSlide);
+        currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+        updateCarousel();
     }}
 
-    // Auto-play (muda de slide a cada 3 segundos)
+    // Auto-play (muda os slides a cada 3 segundos)
     setInterval(nextSlide, 3000);
 </script>
 """
 
 # Exibir carrossel no Streamlit
-st.components.v1.html(carousel_html, height=150)
+st.components.v1.html(carousel_html, height=400)
