@@ -34,7 +34,7 @@ set_background("bc.jpg")
 # --- PAGE SETUP ---
 Home = st.Page(
     "views/home.py",
-    title="About Me",
+    title="home",
     icon=":material/account_circle:",
     default=True,
 )
