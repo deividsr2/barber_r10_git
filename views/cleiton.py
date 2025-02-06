@@ -1,19 +1,16 @@
 import streamlit as st
 from PIL import Image
-from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_atividades, buscar_senha_barbeiro
+from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_atividades, buscar_senha_barbeiro, atualizar_senha_barbeiro
 from datetime import datetime
 import pandas as pd
 import base64
 import plotly.express as px
 
 # Configuração da página
-# st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
-
-# Função para definir o background
 def set_background(image_file):
     with open(image_file, "rb") as image:
         encoded_string = base64.b64encode(image.read()).decode()
-    
+
     background_style = f"""
     <style>
     .stApp {{
@@ -25,7 +22,7 @@ def set_background(image_file):
     st.markdown(background_style, unsafe_allow_html=True)
 
 # Chama a função para definir o fundo
-set_background("bc.jpg") 
+set_background("bc.jpg")
 
 with st.container():
     col1, col2 = st.columns([1, 4])
@@ -83,7 +80,7 @@ st.title("Atividades de Cleiton 💈")
 atividades = buscar_atividades()
 if atividades:
     df = pd.DataFrame(atividades)
-    
+
     # Filtrar apenas Cleiton
     df = df[df["barbeiro"] == "cleiton"]
 
@@ -96,7 +93,7 @@ if atividades:
 
     data_min = df["data_hora"].min().date()
     data_max = df["data_hora"].max().date()
-    
+
     data_inicio = col1.date_input("Data inicial:", data_min)
     data_fim = col2.date_input("Data final:", data_max)
 
@@ -110,7 +107,7 @@ if atividades:
 
     if senha_correta:
         senha_digitada = st.text_input("Digite sua senha para ver os valores:", type="password")
-        
+
         if senha_digitada:
             if senha_digitada == senha_correta:
                 st.success("✅ Acesso liberado!")
@@ -136,27 +133,32 @@ if atividades:
 
             else:
                 st.error("❌ Senha incorreta! Tente novamente.")
+        
+        # Opção de troca de senha visível apenas se o usuário estiver logado
+        if senha_digitada == senha_correta:
+            st.subheader("🔒 Alterar Senha")
+
+            # Campo para a nova senha
+            nova_senha = st.text_input("Digite a nova senha:", type="password")
+            confirmar_senha = st.text_input("Confirme a nova senha:", type="password")
+
+            if st.button("Alterar Senha"):
+                if nova_senha and confirmar_senha:
+                    if nova_senha == confirmar_senha:
+                        try:
+                            atualizar_senha_barbeiro(barbeiro_selecionado, nova_senha)
+                            st.success("Senha alterada com sucesso! 🎉")
+                        except Exception as e:
+                            st.error(f"Erro ao atualizar senha: {e}")
+                    else:
+                        st.error("As senhas não coincidem. Tente novamente.")
+                else:
+                    st.warning("Preencha os dois campos para trocar a senha.")
+
     else:
-        st.error("⚠️ Não foi possível recuperar a senha.")
+        # Se o barbeiro não souber a senha
+        if st.button("Esqueci minha senha"):
+            # Aqui pode-se adicionar a lógica para recuperação ou redefinição de senha
+            st.warning("Para redefinir a senha, entre em contato com o administrador da plataforma.")
 
-st.subheader("🔒 Alterar Senha")
-
-# Campo para a nova senha
-nova_senha = st.text_input("Digite a nova senha:", type="password")
-confirmar_senha = st.text_input("Confirme a nova senha:", type="password")
-
-if st.button("Alterar Senha"):
-    if nova_senha and confirmar_senha:
-        if nova_senha == confirmar_senha:
-            try:
-                from banco import atualizar_senha_barbeiro
-                
-                atualizar_senha_barbeiro("cleiton", nova_senha)
-                st.success("Senha alterada com sucesso! 🎉")
-            except Exception as e:
-                st.error(f"Erro ao atualizar senha: {e}")
-        else:
-            st.error("As senhas não coincidem. Tente novamente.")
-    else:
-        st.warning("Preencha os dois campos para trocar a senha.")
-
+st.markdown("---")
