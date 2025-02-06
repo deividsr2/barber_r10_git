@@ -64,7 +64,7 @@ with st.form("form_atividade"):
     if submitted:
         try:
             inserir_atividade(
-                id_barbeiro=3,
+                id_barbeiro=1,  
                 barbeiro="randerson",
                 data_hora=data_hora,
                 servico=servico_selecionado[1],
