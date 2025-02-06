@@ -174,7 +174,7 @@ def buscar_senha_barbeiro(nome_barbeiro):
     """
     Busca a senha do barbeiro no banco de dados.
     """
-    query = text("SELECT senha FROM r10_barbeiros WHERE barbeiro = :barbeiro")
+    query = text("SELECT sa FROM r10_barbeiros WHERE barbeiro = :barbeiro")
     with engine.connect() as connection:
         result = connection.execute(query, {"barbeiro": nome_barbeiro}).fetchone()
         return result[0] if result else None  # Retorna a senha ou None
