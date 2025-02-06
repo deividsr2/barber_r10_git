@@ -24,12 +24,17 @@ set_background("bc.jpg")
 
 st.title("📊 Painel Financeiro")
 
-# Verifica se o usuário tem permissão para acessar o painel financeiro
-usuario = ["randerson","financeiro"]  # Defina o nome de usuário como Randerson (ou de outro usuário autorizado)
-senha_correta = buscar_senha_barbeiro(usuario)  # Busca a senha no banco para o usuário
+# Lista de usuários autorizados
+usuarios_autorizados = ["randerson", "financeiro"]
 
-# Solicitar a senha antes de liberar o acesso
-senha_digitada = st.text_input("Digite sua senha para acessar o painel financeiro:", type="password")
+# Solicitar o nome de usuário
+usuario = st.selectbox("Escolha seu usuário:", options=usuarios_autorizados)
+
+# Buscar a senha do usuário
+senha_correta = buscar_senha_barbeiro(usuario)
+
+# Solicitar a senha para acessar o painel
+senha_digitada = st.text_input(f"Digite a senha do usuário {usuario.capitalize()} para acessar o painel financeiro:", type="password")
 
 if senha_digitada:
     if senha_digitada == senha_correta:
