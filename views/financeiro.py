@@ -1,16 +1,14 @@
 import streamlit as st
-from banco import buscar_atividades
+from banco import buscar_atividades, buscar_senha_barbeiro
 import pandas as pd
 import base64
 import plotly.express as px
 
 # Configuração da página
-
-# Função para definir o background
 def set_background(image_file):
     with open(image_file, "rb") as image:
         encoded_string = base64.b64encode(image.read()).decode()
-    
+
     background_style = f"""
     <style>
     .stApp {{
@@ -26,88 +24,99 @@ set_background("bc.jpg")
 
 st.title("📊 Painel Financeiro")
 
-# Buscar todas as atividades (de todos os barbeiros)
-atividades = buscar_atividades()
+# Verifica se o usuário tem permissão para acessar o painel financeiro
+usuario = "randerson"  # Defina o nome de usuário como Randerson (ou de outro usuário autorizado)
+senha_correta = buscar_senha_barbeiro(usuario)  # Busca a senha no banco para o usuário
 
-if atividades:
-    df = pd.DataFrame(atividades)
+# Solicitar a senha antes de liberar o acesso
+senha_digitada = st.text_input("Digite sua senha para acessar o painel financeiro:", type="password")
 
-    # Converter 'data_hora' para datetime
-    df["data_hora"] = pd.to_datetime(df["data_hora"], format="%Y-%m-%d %H:%M:%S")
+if senha_digitada:
+    if senha_digitada == senha_correta:
+        st.success("✅ Acesso liberado!")
 
-    # Criar filtro de data ACIMA DOS GRÁFICOS
-    st.subheader("📅 Filtro de Data")
-    col1, col2 = st.columns(2)
+        # Buscar todas as atividades (de todos os barbeiros)
+        atividades = buscar_atividades()
 
-    data_min = df["data_hora"].min().date()
-    data_max = df["data_hora"].max().date()
-    
-    data_inicio = col1.date_input("Data inicial:", data_min)
-    data_fim = col2.date_input("Data final:", data_max)
+        if atividades:
+            df = pd.DataFrame(atividades)
 
-    # Aplicar filtro de data
-    df_filtrado = df[(df["data_hora"].dt.date >= data_inicio) & (df["data_hora"].dt.date <= data_fim)]
+            # Converter 'data_hora' para datetime
+            df["data_hora"] = pd.to_datetime(df["data_hora"], format="%Y-%m-%d %H:%M:%S")
 
-    # Criar KPIs acima dos gráficos
-    col1, col2, col3 = st.columns(3)
+            # Criar filtro de data ACIMA DOS GRÁFICOS
+            st.subheader("📅 Filtro de Data")
+            col1, col2 = st.columns(2)
 
-    total_valor = df_filtrado["valor"].sum()
-    col1.metric(label="💰 Receita Total", value=f"R$ {total_valor:.2f}")
+            data_min = df["data_hora"].min().date()
+            data_max = df["data_hora"].max().date()
 
-    lucro_percentual = col2.slider("Selecione o percentual de lucro:", min_value=10, max_value=100, value=50, step=5)
-    lucro_calculado = (total_valor * lucro_percentual) / 100
-    col2.metric(label=f"📈 Lucro Estimado ({lucro_percentual}%)", value=f"R$ {lucro_calculado:.2f}")
+            data_inicio = col1.date_input("Data inicial:", data_min)
+            data_fim = col2.date_input("Data final:", data_max)
 
-    total_servicos = df_filtrado.shape[0]
-    col3.metric(label="💼 Serviços Realizados", value=f"{total_servicos}")
+            # Aplicar filtro de data
+            df_filtrado = df[(df["data_hora"].dt.date >= data_inicio) & (df["data_hora"].dt.date <= data_fim)]
 
-    # 📊 Gráfico de barras - Receita por Data
-    st.subheader("📊 Receita por Data")
-    df_filtrado["Data"] = df_filtrado["data_hora"].dt.date  # Removendo a hora do eixo X
-    fig1 = px.bar(
-        df_filtrado,
-        x="Data",
-        y="valor",
-        title="Receita por Data",
-        labels={"Data": "Data", "valor": "Valor R$"},
-        text_auto=True
-    )
+            # Criar KPIs acima dos gráficos
+            col1, col2, col3 = st.columns(3)
 
+            total_valor = df_filtrado["valor"].sum()
+            col1.metric(label="💰 Receita Total", value=f"R$ {total_valor:.2f}")
 
+            lucro_percentual = col2.slider("Selecione o percentual de lucro:", min_value=10, max_value=100, value=50, step=5)
+            lucro_calculado = (total_valor * lucro_percentual) / 100
+            col2.metric(label=f"📈 Lucro Estimado ({lucro_percentual}%)", value=f"R$ {lucro_calculado:.2f}")
 
-    st.plotly_chart(fig1, use_container_width=True)
+            total_servicos = df_filtrado.shape[0]
+            col3.metric(label="💼 Serviços Realizados", value=f"{total_servicos}")
 
-    # 📊 Gráfico de pizza - Receita por Barbeiro
-    st.subheader("🍕 Receita por Barbeiro")
-    fig2 = px.pie(
-        df_filtrado,
-        names="barbeiro",
-        values="valor",
-        title="Faturamento por Barbeiro",
-        hole=0.4  # Para estilo de donut
-    )
+            # 📊 Gráfico de barras - Receita por Data
+            st.subheader("📊 Receita por Data")
+            df_filtrado["Data"] = df_filtrado["data_hora"].dt.date  # Removendo a hora do eixo X
+            fig1 = px.bar(
+                df_filtrado,
+                x="Data",
+                y="valor",
+                title="Receita por Data",
+                labels={"Data": "Data", "valor": "Valor R$"},
+                text_auto=True
+            )
 
-    st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig1, use_container_width=True)
 
-    # 📊 Gráfico de barras - Receita por Tipo de Serviço
-    st.subheader("💇‍♂️ Receita por Tipo de Serviço")
-    fig3 = px.bar(
-        df_filtrado,
-        x="servico",
-        y="valor",
-        title="Faturamento por Tipo de Serviço",
-        labels={"servico": "Serviço", "valor": "Valor R$"},
-        text_auto=True,
-        color="servico"
-    )
+            # 📊 Gráfico de pizza - Receita por Barbeiro
+            st.subheader("🍕 Receita por Barbeiro")
+            fig2 = px.pie(
+                df_filtrado,
+                names="barbeiro",
+                values="valor",
+                title="Faturamento por Barbeiro",
+                hole=0.4  # Para estilo de donut
+            )
 
-    
+            st.plotly_chart(fig2, use_container_width=True)
 
-    st.plotly_chart(fig3, use_container_width=True)
+            # 📊 Gráfico de barras - Receita por Tipo de Serviço
+            st.subheader("💇‍♂️ Receita por Tipo de Serviço")
+            fig3 = px.bar(
+                df_filtrado,
+                x="servico",
+                y="valor",
+                title="Faturamento por Tipo de Serviço",
+                labels={"servico": "Serviço", "valor": "Valor R$"},
+                text_auto=True,
+                color="servico"
+            )
 
-    # Exibir DataFrame abaixo dos gráficos
-    st.subheader("📋 Atividades Registradas")
-    st.dataframe(df_filtrado, use_container_width=True)
+            st.plotly_chart(fig3, use_container_width=True)
 
+            # Exibir DataFrame abaixo dos gráficos
+            st.subheader("📋 Atividades Registradas")
+            st.dataframe(df_filtrado, use_container_width=True)
+
+        else:
+            st.info("Nenhuma atividade registrada até o momento.")
+    else:
+        st.error("❌ Senha incorreta! Tente novamente.")
 else:
-    st.info("Nenhuma atividade registrada até o momento.")
+    st.warning("Por favor, insira a senha para acessar o painel financeiro.")
