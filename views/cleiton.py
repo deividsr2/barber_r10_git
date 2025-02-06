@@ -1,13 +1,13 @@
 import streamlit as st
 from PIL import Image
-from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_atividades
+from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_atividades, buscar_senha_barbeiro
 from datetime import datetime
 import pandas as pd
 import base64
 import plotly.express as px
 
 # Configuração da página
-#st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
+# st.set_page_config(page_title="R10 Barber Shop", page_icon="💈", layout="centered")
 
 # Função para definir o background
 def set_background(image_file):
@@ -103,32 +103,38 @@ if atividades:
     # Aplicar filtro de data
     df_filtrado = df[(df["data_hora"].dt.date >= data_inicio) & (df["data_hora"].dt.date <= data_fim)]
 
-    # Exibir KPI acima do gráfico com cálculo de lucro
-    col1, col2 = st.columns(2)
-    
-    total_valor = df_filtrado["valor"].sum()
-    col1.metric(label="💰 Receita Total no Período", value=f"R$ {total_valor:.2f}")
+    st.markdown("---")
+    st.title(f"💰 Acesso Financeiro - {barbeiro_selecionado.capitalize()}")
 
-    lucro_percentual = col2.slider("Selecione o percentual de lucro:", min_value=10, max_value=100, value=50, step=5)
-    lucro_calculado = (total_valor * lucro_percentual) / 100
-    col2.metric(label=f"📈 Lucro Estimado ({lucro_percentual}%)", value=f"R$ {lucro_calculado:.2f}")
+    senha_correta = buscar_senha_barbeiro(barbeiro_selecionado)  # Busca a senha no banco
 
-    # Criar gráfico de barras sem background
-    st.subheader("📊 Receita por Data")
-    df_filtrado["Data"] = df_filtrado["data_hora"].dt.date  # Removendo a hora do eixo X
-    fig = px.bar(
-        df_filtrado,
-        x="Data",  # Agora apenas a data, sem hora
-        y="valor",
-        title="Receita por Data",
-        labels={"Data": "Data", "valor": "Valor R$"},
-        text_auto=True
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    if senha_correta:
+        senha_digitada = st.text_input("Digite sua senha para ver os valores:", type="password")
+        
+        if senha_digitada:
+            if senha_digitada == senha_correta:
+                st.success("✅ Acesso liberado!")
 
+                # Exibir KPIs financeiros
+                col1, col2 = st.columns(2)
+                total_valor = df_filtrado["valor"].sum()
+                col1.metric(label="💰 Receita Total no Período", value=f"R$ {total_valor:.2f}")
 
-    # Exibir DataFrame abaixo do gráfico
-    st.subheader("📋 Atividades Registradas")
-    st.dataframe(df_filtrado, use_container_width=True)
-else:
-    st.info("Nenhuma atividade registrada até o momento.")
+                lucro_percentual = col2.slider("Selecione o percentual de lucro:", min_value=10, max_value=100, value=50, step=5)
+                lucro_calculado = (total_valor * lucro_percentual) / 100
+                col2.metric(label=f"📈 Lucro Estimado ({lucro_percentual}%)", value=f"R$ {lucro_calculado:.2f}")
+
+                # Criar gráfico de barras
+                st.subheader("📊 Receita por Data")
+                df_filtrado["Data"] = df_filtrado["data_hora"].dt.date
+                fig = px.bar(df_filtrado, x="Data", y="valor", title="Receita por Data", labels={"Data": "Data", "valor": "Valor R$"}, text_auto=True)
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Exibir DataFrame abaixo do gráfico
+                st.subheader("📋 Atividades Registradas")
+                st.dataframe(df_filtrado, use_container_width=True)
+
+            else:
+                st.error("❌ Senha incorreta! Tente novamente.")
+    else:
+        st.error("⚠️ Não foi possível recuperar a senha.")
