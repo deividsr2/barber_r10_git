@@ -25,7 +25,7 @@ set_background("bc.jpg")
 st.title("📊 Painel Financeiro")
 
 # Verifica se o usuário tem permissão para acessar o painel financeiro
-usuario = "randerson"  # Defina o nome de usuário como Randerson (ou de outro usuário autorizado)
+usuario = ["randerson","financeiro"]  # Defina o nome de usuário como Randerson (ou de outro usuário autorizado)
 senha_correta = buscar_senha_barbeiro(usuario)  # Busca a senha no banco para o usuário
 
 # Solicitar a senha antes de liberar o acesso
