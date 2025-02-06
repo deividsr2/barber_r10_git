@@ -138,3 +138,25 @@ if atividades:
                 st.error("❌ Senha incorreta! Tente novamente.")
     else:
         st.error("⚠️ Não foi possível recuperar a senha.")
+
+st.subheader("🔒 Alterar Senha")
+
+# Campo para a nova senha
+nova_senha = st.text_input("Digite a nova senha:", type="password")
+confirmar_senha = st.text_input("Confirme a nova senha:", type="password")
+
+if st.button("Alterar Senha"):
+    if nova_senha and confirmar_senha:
+        if nova_senha == confirmar_senha:
+            try:
+                from banco import atualizar_senha_barbeiro
+                
+                atualizar_senha_barbeiro("cleiton", nova_senha)
+                st.success("Senha alterada com sucesso! 🎉")
+            except Exception as e:
+                st.error(f"Erro ao atualizar senha: {e}")
+        else:
+            st.error("As senhas não coincidem. Tente novamente.")
+    else:
+        st.warning("Preencha os dois campos para trocar a senha.")
+

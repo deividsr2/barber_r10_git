@@ -179,3 +179,12 @@ def buscar_senha_barbeiro(nome_barbeiro):
         result = connection.execute(query, {"barbeiro": nome_barbeiro}).fetchone()
         return result[0] if result else None  # Retorna a senha ou None
 
+
+def atualizar_senha_barbeiro(nome_barbeiro, nova_senha):
+    """
+    Atualiza a senha do barbeiro no banco de dados.
+    """
+    query = text("UPDATE r10_barbeiros SET sa = :nova_senha WHERE barbeiro = :barbeiro")
+    with engine.connect() as connection:
+        connection.execute(query, {"nova_senha": nova_senha, "barbeiro": nome_barbeiro})
+        connection.commit()
