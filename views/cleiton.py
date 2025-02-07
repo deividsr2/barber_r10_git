@@ -1,22 +1,26 @@
 import streamlit as st
 from PIL import Image
-from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_atividades, buscar_senha_barbeiro, atualizar_senha_barbeiro
+from banco import buscar_barbeiros, buscar_servicos, inserir_atividade, buscar_atividades, buscar_senha_barbeiro
 from datetime import datetime
 import pandas as pd
 import base64
 import plotly.express as px
-import requests
 import mercadopago
+import os
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente do .env
+load_dotenv()
 
 # Função para gerar link de pagamento
-def gerar_link(titulo, valor):
-    sdk = mercadopago.SDK("APP_USR-6731345204339065-020710-68737c81ae3389b9e045d69cbc904e8b-2255989128")
+def gerar_link(servico, valor):
+    sdk = mercadopago.SDK(os.getenv("MERCADO_PAGO_TOKEN"))
 
     payment_data = {
         "items": [
             {
                 "id": "1",
-                "title": titulo,
+                "title": servico,
                 "quantity": 1,
                 "currency_id": "BRL",
                 "unit_price": valor
@@ -31,13 +35,12 @@ def gerar_link(titulo, valor):
     }
 
     result = sdk.preference().create(payment_data)
-    
     payment = result["response"]
     link_pagamento = payment.get("init_point", "")
 
     return link_pagamento
 
-# Configuração da página
+# Definir fundo da página
 def set_background(image_file):
     with open(image_file, "rb") as image:
         encoded_string = base64.b64encode(image.read()).decode()
@@ -52,9 +55,9 @@ def set_background(image_file):
     """
     st.markdown(background_style, unsafe_allow_html=True)
 
-# Chama a função para definir o fundo
 set_background("bc.jpg")
 
+# Cabeçalho da página
 with st.container():
     col1, col2 = st.columns([1, 4])
     logo = Image.open("logo.png")
@@ -64,11 +67,10 @@ with st.container():
 st.markdown("---")
 st.title("Cadastro de Atividades")
 
-# Buscar dados das tabelas r10_barbeiros e r10_servicos
+# Buscar barbeiros e serviços
 barbeiros = buscar_barbeiros()
 servicos = buscar_servicos()
 
-# Montar listas para os selectbox
 lista_barbeiros = [(barbeiro["id"], barbeiro["barbeiro"]) for barbeiro in barbeiros]
 lista_servicos = [(servico["id"], servico["servico"], servico["valor"]) for servico in servicos]
 
@@ -87,7 +89,13 @@ with st.form("form_atividade"):
 
     data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    submitted = st.form_submit_button("Cadastrar Atividade")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        submitted = st.form_submit_button("Gerar Atividade ✂️")
+
+    with col2:
+        pagamento = st.form_submit_button("Ir para Pagamento 💳")
 
     if submitted:
         try:
@@ -104,6 +112,17 @@ with st.form("form_atividade"):
         except Exception as e:
             st.error(f"Erro ao cadastrar atividade: {e}")
 
+    if pagamento:
+        titulo_servico = servico_selecionado[1]
+        valor_servico = float(servico_selecionado[2])  # Garantir que seja float
+        link_pagamento = gerar_link(titulo_servico, valor_servico)
+        
+        if link_pagamento:
+            st.success("✅ Link de pagamento gerado com sucesso!")
+            st.markdown(f"[🔗 Clique aqui para pagar]({link_pagamento})", unsafe_allow_html=True)
+        else:
+            st.error("❌ Erro ao gerar link de pagamento. Tente novamente.")
+
 # Exibir atividades apenas do Cleiton
 st.markdown("---")
 st.title("Atividades de Cleiton 💈")
@@ -112,13 +131,10 @@ atividades = buscar_atividades()
 if atividades:
     df = pd.DataFrame(atividades)
 
-    # Filtrar apenas Cleiton
     df = df[df["barbeiro"] == "cleiton"]
 
-    # Converter 'data_hora' para datetime
     df["data_hora"] = pd.to_datetime(df["data_hora"], format="%Y-%m-%d %H:%M:%S")
 
-    # Criar filtro de data ACIMA DO GRÁFICO
     st.subheader("📅 Filtro de Data")
     col1, col2 = st.columns(2)
 
@@ -128,13 +144,12 @@ if atividades:
     data_inicio = col1.date_input("Data inicial:", data_min)
     data_fim = col2.date_input("Data final:", data_max)
 
-    # Aplicar filtro de data
     df_filtrado = df[(df["data_hora"].dt.date >= data_inicio) & (df["data_hora"].dt.date <= data_fim)]
 
     st.markdown("---")
     st.title(f"💰 Acesso Financeiro - {barbeiro_selecionado.capitalize()}")
 
-    senha_correta = buscar_senha_barbeiro(barbeiro_selecionado)  # Busca a senha no banco
+    senha_correta = buscar_senha_barbeiro(barbeiro_selecionado)
 
     if senha_correta:
         senha_digitada = st.text_input("Digite sua senha para ver os valores:", type="password")
@@ -143,7 +158,6 @@ if atividades:
             if senha_digitada == senha_correta:
                 st.success("✅ Acesso liberado!")
 
-                # Exibir KPIs financeiros
                 col1, col2 = st.columns(2)
                 total_valor = df_filtrado["valor"].sum()
                 col1.metric(label="💰 Receita Total no Período", value=f"R$ {total_valor:.2f}")
@@ -152,24 +166,10 @@ if atividades:
                 lucro_calculado = (total_valor * lucro_percentual) / 100
                 col2.metric(label=f"📈 Lucro Estimado ({lucro_percentual}%)", value=f"R$ {lucro_calculado:.2f}")
 
-                # Criar gráfico de barras
                 st.subheader("📊 Receita por Data")
                 df_filtrado["Data"] = df_filtrado["data_hora"].dt.date
                 fig = px.bar(df_filtrado, x="Data", y="valor", title="Receita por Data", labels={"Data": "Data", "valor": "Valor R$"}, text_auto=True)
                 st.plotly_chart(fig, use_container_width=True)
 
-                # Exibir DataFrame abaixo do gráfico
                 st.subheader("📋 Atividades Registradas")
                 st.dataframe(df_filtrado, use_container_width=True)
-
-                # Botão para gerar cobrança
-                if st.button("Gerar Cobrança"):
-                    # Dados da cobrança
-                    descricao = servico_selecionado[1]
-                    valor_cobranca = servico_selecionado[2]
-                    
-                    # Gerar link de pagamento
-                    cobranca_url = gerar_link(descricao, valor_cobranca)
-                    
-                    if cobranca_url:
-                        st.success("Cobrança gerada com sucesso!")

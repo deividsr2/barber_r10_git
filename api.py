@@ -16,7 +16,7 @@ def gerar_link(servico, valor):
                 "title": servico,
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": valor
+                "unit_price": float(valor)  # Convertendo para float antes de enviar
             }
         ],
         "back_urls": {
