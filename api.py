@@ -1,13 +1,10 @@
 import mercadopago
-import os
-from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente do arquivo .env
-load_dotenv()
+# Token do Mercado Pago diretamente no código
+token = "APP_USR-6731345204339065-020710-68737c81ae3389b9e045d69cbc904e8b-2255989128"
 
 def gerar_link(servico, valor):
-    # Obter o token de acesso da variável de ambiente
-    sdk = mercadopago.SDK(os.getenv("MERCADO_PAGO_TOKEN"))
+    sdk = mercadopago.SDK(token)
 
     payment_data = {
         "items": [
@@ -16,7 +13,7 @@ def gerar_link(servico, valor):
                 "title": servico,
                 "quantity": 1,
                 "currency_id": "BRL",
-                "unit_price": float(valor)  # Convertendo para float antes de enviar
+                "unit_price": valor
             }
         ],
         "back_urls": {
