@@ -10,7 +10,15 @@ import os
 from dotenv import load_dotenv
 
 # Carregar variáveis de ambiente do .env
-load_dotenv()
+
+
+load_dotenv()  # Carregar variáveis de ambiente do arquivo .env
+
+token = os.getenv("MERCADO_PAGO_TOKEN")
+if not token:
+    raise ValueError("Token do Mercado Pago não encontrado no arquivo .env")
+print(f"Token carregado: {token}")  # Verifique se o token é carregado corretamente
+
 
 # Função para gerar link de pagamento
 def gerar_link(servico, valor):
