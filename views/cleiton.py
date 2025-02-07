@@ -5,36 +5,6 @@ from datetime import datetime
 import pandas as pd
 import base64
 import plotly.express as px
-import mercadopago
-
-# Função para gerar link de pagamento
-def gerar_link(titulo, valor):
-    sdk = mercadopago.SDK("APP_USR-6731345204339065-020710-68737c81ae3389b9e045d69cbc904e8b-2255989128")
-
-    payment_data = {
-        "items": [
-            {
-                "id": "1",
-                "title": titulo,
-                "quantity": 1,
-                "currency_id": "BRL",
-                "unit_price": valor
-            }
-        ],
-        "back_urls": {
-            "success": "https://deividsr2-barber-r10-git-main-v4o0iy.streamlit.app/sucesso",
-            "failure": "https://deividsr2-barber-r10-git-main-v4o0iy.streamlit.app/falha",
-            "pending": "https://deividsr2-barber-r10-git-main-v4o0iy.streamlit.app/falha"
-        },
-        "auto_return": "all"
-    }
-
-    result = sdk.preference().create(payment_data)
-    
-    payment = result["response"]
-    link_pagamento = payment.get("init_point", "")
-
-    return link_pagamento
 
 # Configuração da página
 def set_background(image_file):
@@ -74,7 +44,7 @@ lista_servicos = [(servico["id"], servico["servico"], servico["valor"]) for serv
 # Formulário para cadastro de atividades
 st.subheader("Preencha os detalhes da atividade:")
 with st.form("form_atividade"):
-    barbeiro_selecionado = "cleiton"  # Fixo no Cleiton
+    barbeiro_selecionado = "cleiton"  # Fixo no cleiton
 
     servico_selecionado = st.selectbox(
         "Serviço:",
@@ -103,15 +73,15 @@ with st.form("form_atividade"):
         except Exception as e:
             st.error(f"Erro ao cadastrar atividade: {e}")
 
-# Exibir atividades apenas do Cleiton
+# Exibir atividades apenas do cleiton
 st.markdown("---")
-st.title("Atividades de Cleiton 💈")
+st.title("Atividades de cleiton 💈")
 
 atividades = buscar_atividades()
 if atividades:
     df = pd.DataFrame(atividades)
 
-    # Filtrar apenas Cleiton
+    # Filtrar apenas cleiton
     df = df[df["barbeiro"] == "cleiton"]
 
     # Converter 'data_hora' para datetime
@@ -161,15 +131,34 @@ if atividades:
                 st.subheader("📋 Atividades Registradas")
                 st.dataframe(df_filtrado, use_container_width=True)
 
-                # Botão para gerar cobrança
-                if st.button("Gerar Cobrança"):
-                    # Dados da cobrança
-                    descricao = servico_selecionado[1]
-                    valor_cobranca = servico_selecionado[2]
-                    
-                    # Gerar link de pagamento
-                    cobranca_url = gerar_link(descricao, valor_cobranca)
-                    
-                    if cobranca_url:
-                        st.success("Cobrança gerada com sucesso!")
-                        st.markdown(f"[Pagar agora]({cobranca_url})")
+            else:
+                st.error("❌ Senha incorreta! Tente novamente.")
+        
+        # Opção de troca de senha visível apenas se o usuário estiver logado
+        if senha_digitada == senha_correta:
+            st.subheader("🔒 Alterar Senha")
+
+            # Campo para a nova senha
+            nova_senha = st.text_input("Digite a nova senha:", type="password")
+            confirmar_senha = st.text_input("Confirme a nova senha:", type="password")
+
+            if st.button("Alterar Senha"):
+                if nova_senha and confirmar_senha:
+                    if nova_senha == confirmar_senha:
+                        try:
+                            atualizar_senha_barbeiro(barbeiro_selecionado, nova_senha)
+                            st.success("Senha alterada com sucesso! 🎉")
+                        except Exception as e:
+                            st.error(f"Erro ao atualizar senha: {e}")
+                    else:
+                        st.error("As senhas não coincidem. Tente novamente.")
+                else:
+                    st.warning("Preencha os dois campos para trocar a senha.")
+
+    else:
+        # Se o barbeiro não souber a senha
+        if st.button("Esqueci minha senha"):
+            # Aqui pode-se adicionar a lógica para recuperação ou redefinição de senha
+            st.warning("Para redefinir a senha, entre em contato com o administrador da plataforma.")
+
+st.markdown("---")
